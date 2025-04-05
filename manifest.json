@@ -20,6 +20,12 @@
     "activeTab",
     "storage"
   ],
+  
+  "web_accessible_resources": [{
+    "resources": ["fonts/*"],
+    "matches": ["<all_urls>"]
+  }],
+
   "host_permissions": [
     "http://*/*",
     "https://*/*",
