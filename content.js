@@ -1,4 +1,8 @@
 console.log('Content script loaded!');
+const faLink = document.createElement("link");
+faLink.rel = "stylesheet";
+faLink.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css";
+document.head.appendChild(faLink);
 
 document.addEventListener('mouseup', function(e) {
     console.log('Mouse up detected');
@@ -26,21 +30,24 @@ document.addEventListener('mouseup', function(e) {
 function createButton(icon, text, onClick, backgroundColor) {
     const button = document.createElement('button');
     button.style.cssText = `
-        padding: 5px 10px;
+        padding: 8px 14px;
         margin: 0 5px;
         background-color: ${backgroundColor};
-        border: 1px solid #ddd;
+        border: none;
         border-radius: 4px;
         cursor: pointer;
         display: flex;
         align-items: center;
+        font-family: system-ui, sans-serif;
         gap: 5px;
         color: white;
-        transition: filter 0.2s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: background 0.2s, transform 0.2s;
+
     `;
 
     const iconSpan = document.createElement('span');
-    iconSpan.textContent = icon;
+    iconSpan.innerHTML = icon; 
     
     const textSpan = document.createElement('span');
     textSpan.textContent = text;
@@ -76,18 +83,20 @@ function showToolbar(x, y, selectedText) {
         z-index: 999999;
         top: ${y}px;
         left: ${x}px;
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 10px 14px;
         display: flex;
-        gap: 5px;
-    `;
+        gap: 10px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.2s ease-in-out;
+  `;
 
     // Add Simplify button (orangeish)
     toolbar.appendChild(
-        createButton('🔄', 'Simplify', async () => {
+        createButton('<i class="fas fa-wand-magic-sparkles"></i>', 'Simplify', async () => {
             console.log('Simplify clicked');
             await simplifySelectedText(selectedText);
         }, '#E29B99')
@@ -95,17 +104,19 @@ function showToolbar(x, y, selectedText) {
 
     // Add Read Aloud button (blue-green)
     toolbar.appendChild(
-        createButton('🔊', 'Read', async () => {
+        createButton('<i class="fas fa-headphones"></i>', 'Read', async () => {
           console.log('Read clicked');
           await readSelectedText(selectedText); 
-        })
-      );
+        }, '#67b1ad')
+
+    );
 
     // Add Save button (lilac)
     toolbar.appendChild(
-        createButton('💾', 'Save', () => {
+        createButton('<i class="fas fa-bookmark"></i>', 'Save', () => {
             console.log('Save clicked');
             saveText(selectedText);
+            await saveText(selectedText); 
         }, '#CEC2ED')
     );
 
