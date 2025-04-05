@@ -1,20 +1,22 @@
-document.getElementById('darkModeButton').addEventListener('click', function() {
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      if (!tabs[0].url.startsWith('chrome://') && !tabs[0].url.startsWith('edge://')) {
-          chrome.scripting.executeScript({
-              target: { tabId: tabs[0].id },
-              function: toggleDarkMode
-          });
-      }
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('darkModeButton').addEventListener('click', function() {
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          if (!tabs[0].url.startsWith('chrome://') && !tabs[0].url.startsWith('edge://')) {
+              chrome.scripting.executeScript({
+                  target: { tabId: tabs[0].id },
+                  function: toggleDarkMode
+              });
+          }
+      });
   });
-});
 
-document.getElementById('viewSaved').addEventListener('click', function() {
-  chrome.windows.create({
-      url: 'saved.html',
-      type: 'popup',
-      width: 400,
-      height: 600
+  document.getElementById('viewSaved').addEventListener('click', function() {
+      chrome.windows.create({
+          url: 'saved.html',
+          type: 'popup',
+          width: 400,
+          height: 600
+      });
   });
 });
 
@@ -27,7 +29,6 @@ function toggleDarkMode() {
       const style = document.createElement('style');
       style.id = 'dark-mode-styles';
       style.innerText = `
-          /* Target everything first */
           * {
               background-color: #121212 !important;
               color: #ffffff !important;

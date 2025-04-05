@@ -1,31 +1,29 @@
 document.addEventListener('DOMContentLoaded', function() {
-  fetchSavedTexts();
-});
-
-function fetchSavedTexts() {
-  // Replace with your session ID logic
-  const sessionId = 'anonymous'; 
-
-  fetch(`http://localhost:5000/get-saved-texts?sessionId=${sessionId}`)
+  console.log("Loading saved texts...");
+  fetch('http://localhost:5000/get-saved-texts?sessionId=anonymous')
       .then(response => response.json())
-      .then(texts => {
-          displaySavedTexts(texts);
+      .then(data => {
+          console.log("Received data:", data);
+          displaySavedTexts(data);
       })
-      .catch(error => console.error('Error:', error));
-}
+      .catch(error => console.error('Error fetching saved texts:', error));
+});
 
 function displaySavedTexts(texts) {
   const container = document.getElementById('saved-texts-container');
-  container.innerHTML = '';
+  if (!container) {
+      console.error('Container not found');
+      return;
+  }
 
   texts.forEach(text => {
-      const textElement = document.createElement('div');
-      textElement.className = 'saved-text';
-      textElement.innerHTML = `
-          <div class="text-content">${text.text}</div>
-          <div class="text-url">From: ${text.url}</div>
-          <div class="timestamp">Saved: ${new Date(text.timestamp).toLocaleString()}</div>
+      const textDiv = document.createElement('div');
+      textDiv.className = 'saved-text';
+      textDiv.innerHTML = `
+          <p>${text.text}</p>
+          <small>From: ${text.url}</small>
+          <small>Saved: ${new Date(text.timestamp).toLocaleString()}</small>
       `;
-      container.appendChild(textElement);
+      container.appendChild(textDiv);
   });
 }

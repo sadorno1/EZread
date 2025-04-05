@@ -22,9 +22,7 @@
   ],
 
   "web_accessible_resources": [{
-    "resources": 
-    ["animal.webm",
-    "fonts/*"],
+    "resources": ["fonts/*"],
     "matches": ["<all_urls>"]
   }],
 

@@ -147,7 +147,7 @@ def get_history():
 def get_saved_texts():
     try:
         session_id = request.args.get("sessionId", "anonymous")
-        print(f"Fetching texts for session: {session_id}")  # Debug print
+        print(f"Fetching texts for session: {session_id}") 
         
         saved_texts = list(
             collection.find(
@@ -155,18 +155,18 @@ def get_saved_texts():
             ).sort("timestamp", -1)
         )
         
-        print(f"Found {len(saved_texts)} texts")  # Debug print
+        print(f"Found {len(saved_texts)} texts")  
         
         # Serialize ObjectId for JSON
         for text in saved_texts:
             text["_id"] = str(text["_id"])
             text["timestamp"] = text["timestamp"].isoformat()
             
-        print("Returning texts:", saved_texts)  # Debug print
+        print("Returning texts:", saved_texts)  
         return jsonify(saved_texts)
 
     except Exception as e:
-        print("Error in get-saved-texts:", e)  # Debug print
+        print("Error in get-saved-texts:", e)  
         return jsonify({"error": str(e)}), 500
     
 if __name__ == "__main__":
