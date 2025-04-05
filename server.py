@@ -2,8 +2,9 @@ from flask import Flask, request, jsonify, send_file
 from flask import after_this_request
 from dotenv import load_dotenv
 import os
+import json
 import google.generativeai as genai
-from gtts import gTTS
+from google.cloud import texttospeech
 import uuid
 from pymongo import MongoClient
 from datetime import datetime
@@ -64,12 +65,40 @@ def speak():
         return jsonify({"error": "No text provided"}), 400
 
     try:
-        #generate MP3 using gTTS
-        tts = gTTS(text=text, lang="en")
-        filename = f"{uuid.uuid4()}.mp3"
-        tts.save(filename)
+        #initialize the TTS client
+        client = texttospeech.TextToSpeechClient()
 
-        #delete the MP3 file after it's sent back to the client
+        #use SSML with <mark> tags for timestamping
+        ssml = f"<speak>{' '.join([f'<mark name=\"w{i}\"/>{word}' for i, word in enumerate(text.split())])}</speak>"
+
+        input_text = texttospeech.SynthesisInput(ssml=ssml)
+
+        voice = texttospeech.VoiceSelectionParams(
+            language_code="en-US",
+            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+        )
+
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3
+        )
+
+        response = client.synthesize_speech(
+            input=input_text,
+            voice=voice,
+            audio_config=audio_config,
+            enable_time_pointing=[texttospeech.SynthesizeSpeechRequest.TimepointType.SSML_MARK]
+        )
+
+        filename = f"{uuid.uuid4()}.mp3"
+        with open(filename, "wb") as out:
+            out.write(response.audio_content)
+
+        #convert timepoints into a  list
+        timepoints = [
+            {"mark": tp.mark_name, "time": tp.time_seconds}
+            for tp in response.timepoints
+        ]
+
         @after_this_request
         def remove_file(response):
             try:
@@ -78,7 +107,15 @@ def speak():
                 print(f"Error deleting file: {e}")
             return response
 
-        return send_file(filename, mimetype="audio/mpeg")
+        return send_file(
+            filename,
+            mimetype="audio/mpeg",
+            as_attachment=False,
+            download_name="read.mp3",
+            headers={
+                "X-Timepoints": json.dumps(timepoints)
+            }
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -102,6 +139,13 @@ def get_history():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+        
+    @app.route("/clear-history", methods=["POST"])
+    def clear_history():
+        session_id = request.json.get("sessionId", "anonymous")
+        collection.delete_many({"sessionId": session_id})
+        return jsonify({"message": "History cleared."})
 
 if __name__ == "__main__":
     app.run(port=5000)
