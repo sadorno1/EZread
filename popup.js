@@ -9,6 +9,15 @@ document.getElementById('darkModeButton').addEventListener('click', function() {
   });
 });
 
+document.getElementById('viewSaved').addEventListener('click', function() {
+  chrome.windows.create({
+      url: 'saved.html',
+      type: 'popup',
+      width: 400,
+      height: 600
+  });
+});
+
 function toggleDarkMode() {
   const existingStyles = document.getElementById('dark-mode-styles');
   
