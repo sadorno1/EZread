@@ -116,7 +116,7 @@ function showToolbar(x, y, selectedText) {
         createButton('<i class="fas fa-bookmark"></i>', 'Save', () => {
             console.log('Save clicked');
             saveText(selectedText);
-            await saveText(selectedText); 
+            //await saveText(selectedText); 
         }, '#CEC2ED')
     );
 
