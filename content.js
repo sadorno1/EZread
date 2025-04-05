@@ -50,7 +50,7 @@ async function simplifySelectedText(text) {
   } catch (error) {
       console.error('General error:', error);
       // If there's an error, revert to original text
-      const selection = window.getSelection();
+      const selection = window.getSelection
       const range = selection.getRangeAt(0);
       range.deleteContents();
       range.insertNode(document.createTextNode(text));
