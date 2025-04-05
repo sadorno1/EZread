@@ -3,13 +3,13 @@ from flask import after_this_request
 from dotenv import load_dotenv
 import os
 import json
+import html
 import google.generativeai as genai
 from google.cloud import texttospeech
 import uuid
 from pymongo import MongoClient
 from datetime import datetime
 from flask_cors import CORS
-
 #load environment variables from .env
 load_dotenv()
 
@@ -51,8 +51,6 @@ def simplify_text():
 #route to convert text to speech and return an MP3 file
 @app.route("/speak", methods=["POST"])
 def speak():
-    print(" /speak endpoint hit!")
-
     data = request.json
     text = data.get("text", "")
 
@@ -60,13 +58,10 @@ def speak():
         return jsonify({"error": "No text provided"}), 400
 
     try:
-        #initialize the TTS client
+        print(" Converting plain text to speech...")
         client = texttospeech.TextToSpeechClient()
 
-        #use SSML with <mark> tags for timestamping
-        ssml = f"<speak>{' '.join([f'<mark name=\"w{i}\"/>{word}' for i, word in enumerate(text.split())])}</speak>"
-
-        input_text = texttospeech.SynthesisInput(ssml=ssml)
+        input_text = texttospeech.SynthesisInput(text=text)
 
         voice = texttospeech.VoiceSelectionParams(
             language_code="en-US",
@@ -80,63 +75,22 @@ def speak():
         response = client.synthesize_speech(
             input=input_text,
             voice=voice,
-            audio_config=audio_config,
-            enable_time_pointing=[texttospeech.SynthesizeSpeechRequest.TimepointType.SSML_MARK]
+            audio_config=audio_config
         )
 
         filename = f"{uuid.uuid4()}.mp3"
         with open(filename, "wb") as out:
             out.write(response.audio_content)
 
-        #convert timepoints into a  list
-        timepoints = [
-            {"mark": tp.mark_name, "time": tp.time_seconds}
-            for tp in response.timepoints
-        ]
-
-        @after_this_request
-        def remove_file(response):
-            try:
-                os.remove(filename)
-            except Exception as e:
-                print(f"Error deleting file: {e}")
-            return response
-
         return send_file(
             filename,
             mimetype="audio/mpeg",
             as_attachment=False,
-            download_name="read.mp3",
-            headers={
-                "X-Timepoints": json.dumps(timepoints)
-            }
+            download_name="read.mp3"
         )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-#route to save things to read later
-@app.route("/save", methods=["POST"])
-def save_simplification():
-    data = request.json
-    session_id = data.get("sessionId", "anonymous")
-    text = data.get("text", "")
-    simplified = data.get("simplified", "")
-    page_url = data.get("url", "")
-
-    if not text or not simplified:
-        return jsonify({"error": "Missing text or simplified content"}), 400
-
-    try:
-        collection.insert_one({
-            "sessionId": session_id,
-            "text": text,
-            "simplified": simplified,
-            "url": page_url,
-            "timestamp": datetime.utcnow()
-        })
-        return jsonify({"message": "Saved for later."})
-    except Exception as e:
+        print(" Exception occurred:", e)
         return jsonify({"error": str(e)}), 500
     
 #route to get history of simplifications

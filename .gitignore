@@ -8,4 +8,5 @@ build/
 venv/
 .venv/
 
-
+#google cloud key
+sharp-cosmos-452005-a0-f2147500cfe6.json

@@ -95,11 +95,11 @@ function showToolbar(x, y, selectedText) {
 
     // Add Read Aloud button
     toolbar.appendChild(
-        createButton('🔊', 'Read', () => {
-            console.log('Read clicked');
-            speakText(selectedText);
+        createButton('🔊', 'Read', async () => {
+          console.log('Read clicked');
+          await readSelectedText(selectedText); 
         })
-    );
+      );
 
     // Add Save button
     toolbar.appendChild(
@@ -180,109 +180,6 @@ async function simplifySelectedText(text) {
     }
 }
 
-async function speakText(text) {
-    try {
-        const response = await fetch('http://127.0.0.1:5000/speak', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text: text })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const audio = new Audio(URL.createObjectURL(blob));
-        audio.play();
-    } catch (error) {
-        console.error('Error in text-to-speech:', error);
-        alert('Error: Could not convert text to speech');
-    }
-}
-
-
-let ttsButton;
-
-document.addEventListener("mouseup", () => {
-  const selectedText = window.getSelection().toString().trim();
-
-  //remove any existing button
-  if (ttsButton) ttsButton.remove();
-
-  if (selectedText.length > 0) {
-    const range = window.getSelection().getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    //create floating button
-    ttsButton = document.createElement("button");
-    ttsButton.innerText = "🔊";
-    ttsButton.style.position = "fixed";
-    ttsButton.style.top = `${rect.top + window.scrollY - 40}px`;
-    ttsButton.style.left = `${rect.left + window.scrollX}px`;
-    ttsButton.style.zIndex = 9999;
-    ttsButton.style.padding = "6px 10px";
-    ttsButton.style.fontSize = "13px";
-    ttsButton.style.background = "#1e88e5";
-    ttsButton.style.color = "#fff";
-    ttsButton.style.border = "none";
-    ttsButton.style.borderRadius = "5px";
-    ttsButton.style.cursor = "pointer";
-    ttsButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.3)";
-    ttsButton.style.transition = "opacity 0.3s ease";
-
-    document.body.appendChild(ttsButton);
-
-    ttsButton.addEventListener("click", () => {
-      readSelectedText(selectedText);
-      ttsButton.remove();
-    });
-  }
-});
-
-async function readSelectedText(text) {
-  const res = await fetch("http://localhost:5000/speak", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
-
-  const timepointsJSON = res.headers.get("X-Timepoints");
-  const timepoints = JSON.parse(timepointsJSON);
-  const audioBlob = await res.blob();
-  const audio = new Audio(URL.createObjectURL(audioBlob));
-  audio.play();
-  audio.onplay = () => console.log("Audio is playing");
-  audio.onerror = e => console.error("Audio error:", e);
-
-
-  //create highlight spans
-  const spanWords = text.split(" ").map((word, i) =>
-    `<span class="ezread-word" id="ezread-word-${i}">${word}</span>`
-  ).join(" ");
-
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  const range = selection.getRangeAt(0);
-
-  range.deleteContents();
-  const wrapper = document.createElement("span");
-  wrapper.innerHTML = spanWords;
-  range.insertNode(wrapper);
-
-  //sync highlighting with timepoints
-  timepoints.forEach(({ mark, time }) => {
-    const wordIndex = parseInt(mark.replace("w", ""));
-    setTimeout(() => {
-      document.querySelectorAll(".ezread-word").forEach(w => w.classList.remove("highlight"));
-      const el = document.getElementById(`ezread-word-${wordIndex}`);
-      if (el) el.classList.add("highlight");
-    }, time * 1000);
-  });
-}
-
 //highlight style
 const style = document.createElement("style");
 style.innerHTML = `
@@ -293,3 +190,37 @@ style.innerHTML = `
   }
 `;
 document.head.appendChild(style);
+
+
+async function readSelectedText(text) {
+  console.log(" readSelectedText called with:", text);
+
+  try {
+    const res = await fetch("http://localhost:5000/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+
+    if (!res.ok) {
+      console.error(" Backend returned:", res.status);
+      alert("TTS error: Backend failed with status " + res.status);
+      return;
+    }
+
+    const audioBlob = await res.blob();
+    const audio = new Audio(URL.createObjectURL(audioBlob));
+
+    audio.onplay = () => console.log("Audio is playing");
+    audio.onerror = e => {
+      console.error(" Audio error:", e);
+      alert("Audio couldn't be played. Check if the MP3 file is valid.");
+    };
+
+    audio.play();
+
+  } catch (err) {
+    console.error(" Error in readSelectedText:", err);
+    alert("Something went wrong with read aloud. See console for details.");
+  }
+}
