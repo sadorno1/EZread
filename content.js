@@ -1,9 +1,7 @@
-console.log("EZRead content script active");
-
-console.log('Content script loaded - EZRead v1.0');
+console.log('Content script loaded!');
 
 document.addEventListener('mouseup', function(e) {
-    console.log('Mouse up event detected');
+    console.log('Mouse up detected');
     
     // Don't trigger if we're clicking inside the toolbar
     if (e.target.closest('#ezread-toolbar')) {
@@ -25,18 +23,20 @@ document.addEventListener('mouseup', function(e) {
     }, 100);
 });
 
-function createButton(icon, text, onClick) {
+function createButton(icon, text, onClick, backgroundColor) {
     const button = document.createElement('button');
     button.style.cssText = `
         padding: 5px 10px;
         margin: 0 5px;
-        background-color: #f0f0f0;
+        background-color: ${backgroundColor};
         border: 1px solid #ddd;
         border-radius: 4px;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 5px;
+        color: white;
+        transition: filter 0.2s;
     `;
 
     const iconSpan = document.createElement('span');
@@ -55,11 +55,11 @@ function createButton(icon, text, onClick) {
     });
 
     button.addEventListener('mouseover', () => {
-        button.style.backgroundColor = '#e0e0e0';
+        button.style.filter = 'brightness(85%)';
     });
 
     button.addEventListener('mouseout', () => {
-        button.style.backgroundColor = '#f0f0f0';
+        button.style.filter = 'brightness(100%)';
     });
 
     return button;
@@ -85,15 +85,15 @@ function showToolbar(x, y, selectedText) {
         gap: 5px;
     `;
 
-    // Add Simplify button
+    // Add Simplify button (orangeish)
     toolbar.appendChild(
         createButton('🔄', 'Simplify', async () => {
             console.log('Simplify clicked');
             await simplifySelectedText(selectedText);
-        })
+        }, '#E29B99')
     );
 
-    // Add Read Aloud button
+    // Add Read Aloud button (blue-green)
     toolbar.appendChild(
         createButton('🔊', 'Read', async () => {
           console.log('Read clicked');
@@ -101,12 +101,12 @@ function showToolbar(x, y, selectedText) {
         })
       );
 
-    // Add Save button
+    // Add Save button (lilac)
     toolbar.appendChild(
         createButton('💾', 'Save', () => {
             console.log('Save clicked');
             saveText(selectedText);
-        })
+        }, '#CEC2ED')
     );
 
     document.body.appendChild(toolbar);
@@ -131,11 +131,43 @@ function removeExistingToolbar() {
 async function simplifySelectedText(text) {
     console.log('Starting text simplification');
     try {
-        // Show loading state
+        // Get the selection and range
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
+        
+        // Get the full text content
+        const textNode = range.startContainer;
+        const fullText = textNode.textContent;
+        
+        // Find the boundaries of the selected text within the full text
+        const selectedStart = range.startOffset;
+        const selectedEnd = range.endOffset;
+        
+        // Find word boundaries
+        let startWord = selectedStart;
+        let endWord = selectedEnd;
+        
+        // Find start of first word
+        while (startWord > 0 && fullText[startWord - 1] !== ' ') {
+            startWord--;
+        }
+        
+        // Find end of last word
+        while (endWord < fullText.length && fullText[endWord] !== ' ') {
+            endWord++;
+        }
+        
+        // Get the complete words
+        const completeWords = fullText.substring(startWord, endWord);
+        console.log('Complete words to simplify:', completeWords);
+
+        // Show loading state
         const loadingSpan = document.createElement('span');
         loadingSpan.textContent = 'Simplifying...';
+        
+        // Update the range to include complete words
+        range.setStart(textNode, startWord);
+        range.setEnd(textNode, endWord);
         range.deleteContents();
         range.insertNode(loadingSpan);
 
@@ -148,7 +180,7 @@ async function simplifySelectedText(text) {
             },
             mode: 'cors',
             body: JSON.stringify({
-                text: text,
+                text: completeWords,
                 sessionId: 'test-session',
                 url: window.location.href
             })
