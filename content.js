@@ -1,7 +1,7 @@
-console.log('Content script loaded - EZRead v1.0');
+console.log('Content script loaded!');
 
 document.addEventListener('mouseup', function(e) {
-    console.log('Mouse up event detected');
+    console.log('Mouse up detected');
     
     // Don't trigger if we're clicking inside the toolbar
     if (e.target.closest('#ezread-toolbar')) {
@@ -129,11 +129,43 @@ function removeExistingToolbar() {
 async function simplifySelectedText(text) {
     console.log('Starting text simplification');
     try {
-        // Show loading state
+        // Get the selection and range
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
+        
+        // Get the full text content
+        const textNode = range.startContainer;
+        const fullText = textNode.textContent;
+        
+        // Find the boundaries of the selected text within the full text
+        const selectedStart = range.startOffset;
+        const selectedEnd = range.endOffset;
+        
+        // Find word boundaries
+        let startWord = selectedStart;
+        let endWord = selectedEnd;
+        
+        // Find start of first word
+        while (startWord > 0 && fullText[startWord - 1] !== ' ') {
+            startWord--;
+        }
+        
+        // Find end of last word
+        while (endWord < fullText.length && fullText[endWord] !== ' ') {
+            endWord++;
+        }
+        
+        // Get the complete words
+        const completeWords = fullText.substring(startWord, endWord);
+        console.log('Complete words to simplify:', completeWords);
+
+        // Show loading state
         const loadingSpan = document.createElement('span');
         loadingSpan.textContent = 'Simplifying...';
+        
+        // Update the range to include complete words
+        range.setStart(textNode, startWord);
+        range.setEnd(textNode, endWord);
         range.deleteContents();
         range.insertNode(loadingSpan);
 
@@ -146,7 +178,7 @@ async function simplifySelectedText(text) {
             },
             mode: 'cors',
             body: JSON.stringify({
-                text: text,
+                text: completeWords,
                 sessionId: 'test-session',
                 url: window.location.href
             })
