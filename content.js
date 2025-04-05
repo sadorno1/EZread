@@ -1,6 +1,4 @@
-console.log("EZRead content script active");
-
-console.log('Content script loaded - EZRead v1.0');
+console.log('Content script loaded!');
 
 document.addEventListener('mouseup', function(e) {
     console.log('Mouse up detected');
@@ -25,18 +23,20 @@ document.addEventListener('mouseup', function(e) {
     }, 100);
 });
 
-function createButton(icon, text, onClick) {
+function createButton(icon, text, onClick, backgroundColor) {
     const button = document.createElement('button');
     button.style.cssText = `
         padding: 5px 10px;
         margin: 0 5px;
-        background-color: #f0f0f0;
+        background-color: ${backgroundColor};
         border: 1px solid #ddd;
         border-radius: 4px;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 5px;
+        color: white;
+        transition: filter 0.2s;
     `;
 
     const iconSpan = document.createElement('span');
@@ -55,11 +55,11 @@ function createButton(icon, text, onClick) {
     });
 
     button.addEventListener('mouseover', () => {
-        button.style.backgroundColor = '#e0e0e0';
+        button.style.filter = 'brightness(85%)';
     });
 
     button.addEventListener('mouseout', () => {
-        button.style.backgroundColor = '#f0f0f0';
+        button.style.filter = 'brightness(100%)';
     });
 
     return button;
@@ -85,28 +85,28 @@ function showToolbar(x, y, selectedText) {
         gap: 5px;
     `;
 
-    // Add Simplify button
+    // Add Simplify button (orangeish)
     toolbar.appendChild(
         createButton('🔄', 'Simplify', async () => {
             console.log('Simplify clicked');
             await simplifySelectedText(selectedText);
-        })
+        }, '#E29B99')
     );
 
-    // Add Read Aloud button
+    // Add Read Aloud button (blue-green)
     toolbar.appendChild(
         createButton('🔊', 'Read', () => {
             console.log('Read clicked');
             speakText(selectedText);
-        })
+        }, '#67b1ad')
     );
 
-    // Add Save button
+    // Add Save button (lilac)
     toolbar.appendChild(
         createButton('💾', 'Save', () => {
             console.log('Save clicked');
             saveText(selectedText);
-        })
+        }, '#CEC2ED')
     );
 
     document.body.appendChild(toolbar);
@@ -235,93 +235,27 @@ async function speakText(text) {
     }
 }
 
+async function saveText(text) {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                url: window.location.href
+            })
+        });
 
-let ttsButton;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-document.addEventListener("mouseup", () => {
-  const selectedText = window.getSelection().toString().trim();
-
-  //remove any existing button
-  if (ttsButton) ttsButton.remove();
-
-  if (selectedText.length > 0) {
-    const range = window.getSelection().getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    //create floating button
-    ttsButton = document.createElement("button");
-    ttsButton.innerText = "🔊";
-    ttsButton.style.position = "fixed";
-    ttsButton.style.top = `${rect.top + window.scrollY - 40}px`;
-    ttsButton.style.left = `${rect.left + window.scrollX}px`;
-    ttsButton.style.zIndex = 9999;
-    ttsButton.style.padding = "6px 10px";
-    ttsButton.style.fontSize = "13px";
-    ttsButton.style.background = "#1e88e5";
-    ttsButton.style.color = "#fff";
-    ttsButton.style.border = "none";
-    ttsButton.style.borderRadius = "5px";
-    ttsButton.style.cursor = "pointer";
-    ttsButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.3)";
-    ttsButton.style.transition = "opacity 0.3s ease";
-
-    document.body.appendChild(ttsButton);
-
-    ttsButton.addEventListener("click", () => {
-      readSelectedText(selectedText);
-      ttsButton.remove();
-    });
-  }
-});
-
-async function readSelectedText(text) {
-  const res = await fetch("http://localhost:5000/speak", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
-
-  const timepointsJSON = res.headers.get("X-Timepoints");
-  const timepoints = JSON.parse(timepointsJSON);
-  const audioBlob = await res.blob();
-  const audio = new Audio(URL.createObjectURL(audioBlob));
-  audio.play();
-  audio.onplay = () => console.log("Audio is playing");
-  audio.onerror = e => console.error("Audio error:", e);
-
-
-  //create highlight spans
-  const spanWords = text.split(" ").map((word, i) =>
-    `<span class="ezread-word" id="ezread-word-${i}">${word}</span>`
-  ).join(" ");
-
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  const range = selection.getRangeAt(0);
-
-  range.deleteContents();
-  const wrapper = document.createElement("span");
-  wrapper.innerHTML = spanWords;
-  range.insertNode(wrapper);
-
-  //sync highlighting with timepoints
-  timepoints.forEach(({ mark, time }) => {
-    const wordIndex = parseInt(mark.replace("w", ""));
-    setTimeout(() => {
-      document.querySelectorAll(".ezread-word").forEach(w => w.classList.remove("highlight"));
-      const el = document.getElementById(`ezread-word-${wordIndex}`);
-      if (el) el.classList.add("highlight");
-    }, time * 1000);
-  });
+        const data = await response.json();
+        alert('Text saved successfully!');
+    } catch (error) {
+        console.error('Error saving text:', error);
+        alert('Error: Could not save text');
+    }
 }
-
-//highlight style
-const style = document.createElement("style");
-style.innerHTML = `
-  .ezread-word.highlight {
-    background-color: #cbe3ff;
-    border-radius: 4px;
-    padding: 1px 3px;
-  }
-`;
-document.head.appendChild(style);
