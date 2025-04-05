@@ -7,6 +7,8 @@ from gtts import gTTS
 import uuid
 from pymongo import MongoClient
 from datetime import datetime
+from flask_cors import CORS
+
 
 #load environment variables from .env
 load_dotenv()
@@ -20,6 +22,7 @@ client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["ezread"]
 collection = db["simplifications"]
 app = Flask(__name__)
+CORS(app)
 
 #root route to check if its running
 @app.route("/")
@@ -35,7 +38,7 @@ def simplify_text():
     page_url = data.get("url", "")
 
     #prompt sent to Gemini
-    prompt = f"Rewrite this in plain English for someone with ADHD or dyslexia:\n\n{user_text}"
+    prompt = f"Rewrite this in simple English for someone with ADHD or dyslexia:\n\n{user_text}"
 
     try:
         response = model.generate_content(prompt)
