@@ -51,6 +51,8 @@ def simplify_text():
 #route to convert text to speech and return an MP3 file
 @app.route("/speak", methods=["POST"])
 def speak():
+    print(" /speak endpoint hit!")
+
     data = request.json
     text = data.get("text", "")
 
