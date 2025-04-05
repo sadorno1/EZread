@@ -2,19 +2,26 @@
 <html>
 <head>
     <title>EZRead</title>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <style>
         body {
             width: 200px;
-            height: 250px;
+            height: 200px;
             padding: 10px;
+            border-radius: 5px;
+            gap: 5px;
+            align-items: center;  
         }
         button {
             width: 100%;
+            top: 2px;
             margin: 5px 0;
             padding: 8px;
             cursor: pointer;
         }
+        p { 
+          margin-bottom: 5px;    
+        }
+
         button:hover {
             filter: brightness(90%);
         }
@@ -22,36 +29,43 @@
             background-color: #4CAF50;
             color: white;
         }
-        lottie-player {
-            width: 100px;
-            height: 100px;
-            margin: 10px auto;
-            display: block;
+
+        #darkModeButton {
+            background-color: #fab1a0;
         }
+        #fontSelect {
+            background-color: #b4cef1;
+}
+        .animation{
+          width: 160px;
+          padding: 0;
+          height: 160px;
+          margin: 0 auto;
+        }
+
 
     </style>
 </head>
 <body>
   <h3> Welcome to EzRead: Your all-in-one reading assistant! </h3>
-  <p> Simplify complex text, listen to content, save important notes, and customize your reading 
-      experience with dark mode and a dyslexia-friendly font option.
+  <p> Simplify <u>complex</u> text, listen to content, save <u>important</u> notes, and <u>customize</u> your reading 
+      experience with dark mode and a <u>dyslexia-friendly</u> font option. <br><br>
   </p>
 
-  <div id="lottie-animation"></div>
+  <hr class="separator">
 
+  <div id="lottie-animation"></div>
+  <video class="animation" autoplay loop muted playsinline>
+    <source src="animal.webm" type="video/webm">
+  </video>  
+  
+  <div class ="button-container"> 
     <button id="darkModeButton">Dark Mode/Light Mode</button>
     <script src="popup.js"></script>
-
+  </div>
+   
     <button id="fontSelect">Accessible Font</button>
     <script src="font.js"></script>
-
-    <lottie-player
-        src="animal.json"
-        background="transparent"
-        speed="1"
-        style="width: 100px; height: 100px;"
-        loop
-        autoplay>
-    </lottie-player>
+  
 </body>
 </html>
