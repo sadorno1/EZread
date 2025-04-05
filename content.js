@@ -137,62 +137,90 @@ function removeExistingToolbar() {
     }
 }
 
+
 async function simplifySelectedText(text) {
-    console.log('Starting text simplification');
-  
-    try {
+  console.log('Starting text simplification');
+  try {
+      // Get the selection and range
       const selection = window.getSelection();
       const range = selection.getRangeAt(0);
-  
-      // Show loading state while fetching
+      
+      // Get the full text content
+      const textNode = range.startContainer;
+      const fullText = textNode.textContent;
+      
+      // Find the boundaries of the selected text within the full text
+      const selectedStart = range.startOffset;
+      const selectedEnd = range.endOffset;
+      
+      // Find word boundaries
+      let startWord = selectedStart;
+      let endWord = selectedEnd;
+      
+      // Find start of first word
+      while (startWord > 0 && fullText[startWord - 1] !== ' ') {
+          startWord--;
+      }
+      
+      // Find end of last word
+      while (endWord < fullText.length && fullText[endWord] !== ' ') {
+          endWord++;
+      }
+      
+      // Get the complete words
+      const completeWords = fullText.substring(startWord, endWord);
+      console.log('Complete words to simplify:', completeWords);
+
+      // Show loading state
       const loadingSpan = document.createElement('span');
       loadingSpan.textContent = 'Simplifying...';
-  
+      
+      // Update the range to include complete words
+      range.setStart(textNode, startWord);
+      range.setEnd(textNode, endWord);
       range.deleteContents();
       range.insertNode(loadingSpan);
-  
+
       console.log('Sending request to backend');
       const response = await fetch('http://127.0.0.1:5000/simplify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify({
-          text: text,  // Use the already captured selectedText
-          sessionId: 'test-session',
-          url: window.location.href
-        })
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+          },
+          mode: 'cors',
+          body: JSON.stringify({
+              text: completeWords,
+              sessionId: 'test-session',
+              url: window.location.href
+          })
       });
-  
+
       console.log('Response status:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error('HTTP error!, ${response.status}');
       }
-  
+
       const data = await response.json();
       console.log('Received response:', data);
       loadingSpan.textContent = data.simplified;
-  
-    } catch (error) {
+
+  } catch (error) {
       console.error('Error in simplifySelectedText:', error);
       const errorSpan = document.createElement('span');
-      errorSpan.textContent = `Error: ${error.message}. Is the server running?`;
+      errorSpan.textContent = 'Error: ${error.message}. Is the server running?';
       errorSpan.style.color = 'red';
-  
       const selection = window.getSelection();
       const range = selection.getRangeAt(0);
       range.deleteContents();
       range.insertNode(errorSpan);
-  
+      
       setTimeout(() => {
-        range.deleteContents();
-        range.insertNode(document.createTextNode(text));
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
       }, 3000);
-    }
   }
-  
+};
 
   async function readSelectedText(text) {
     console.log(" readSelectedText called with:", text);
