@@ -1,11 +1,10 @@
-from flask import Flask, request, jsonify, send_file
-from flask import after_this_request
+from flask import Flask, request, jsonify, Response, after_this_request
 from dotenv import load_dotenv
 import os
 import json
 import html
 import google.generativeai as genai
-from google.cloud import texttospeech
+from google.cloud import texttospeech_v1beta1 as texttospeech
 import uuid
 from pymongo import MongoClient
 from datetime import datetime, timezone
@@ -24,6 +23,8 @@ db = client["ezread"]
 collection = db["simplifications"]
 app = Flask(__name__)
 CORS(app)
+CORS(app, expose_headers=["X-Timepoints"])
+
 
 #root route to check if its running
 @app.route("/")
@@ -59,46 +60,67 @@ def speak():
         return jsonify({"error": "No text provided"}), 400
 
     try:
-        print(" Converting plain text to speech...")
         client = texttospeech.TextToSpeechClient()
 
-        input_text = texttospeech.SynthesisInput(text=text)
+        # Add SSML marks before each word
+        ssml = "<speak>" + " ".join(
+            [f'<mark name="w{i}"/>{html.escape(word)}' for i, word in enumerate(text.split())]
+        ) + "</speak>"
 
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+        # Create the request
+        request_obj = texttospeech.SynthesizeSpeechRequest(
+            input=texttospeech.SynthesisInput(ssml=ssml),
+            voice=texttospeech.VoiceSelectionParams(
+                language_code="en-US",
+                ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+            ),
+            audio_config=texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3
+            ),
+            enable_time_pointing=["SSML_MARK"]
         )
 
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3
-        )
+        response = client.synthesize_speech(request=request_obj)
 
-        response = client.synthesize_speech(
-            input=input_text,
-            voice=voice,
-            audio_config=audio_config
-        )
-
+        # Save audio temporarily
         filename = f"{uuid.uuid4()}.mp3"
         with open(filename, "wb") as out:
             out.write(response.audio_content)
 
-        return send_file(
-            filename,
+        # Prepare timepoints
+        timepoints = [
+            {"mark": tp.mark_name, "time": tp.time_seconds}
+            for tp in response.timepoints
+        ]
+
+        @after_this_request
+        def cleanup(response):
+            try:
+                os.remove(filename)
+            except Exception as e:
+                print(f"Error deleting {filename}: {str(e)}")
+            return response
+
+        # Create and return response
+        with open(filename, "rb") as f:
+            audio_data = f.read()
+
+        response = Response(
+            audio_data,
             mimetype="audio/mpeg",
-            as_attachment=False,
-            download_name="read.mp3"
+            headers={
+                "Content-Disposition": "inline; filename=read.mp3",
+                "X-Timepoints": json.dumps(timepoints)
+            }
         )
+        return response
 
     except Exception as e:
-        print(" Exception occurred:", e)
         return jsonify({"error": str(e)}), 500
     
 @app.route("/save", methods=["POST"])
 def save_simplification():
     data = request.json
-    print("Payload received at /save:", data)
-
     session_id = data.get("sessionId", "anonymous")
     original = data.get("text", "")
     note = data.get("note", "") 
@@ -119,7 +141,6 @@ def save_simplification():
         return jsonify({"message": "Text saved successfully."})
 
     except Exception as e:
-        print("error as ", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -143,6 +164,7 @@ def get_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5000, debug=True)
 
