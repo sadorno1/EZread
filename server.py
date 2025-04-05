@@ -8,10 +8,11 @@ import google.generativeai as genai
 from google.cloud import texttospeech
 import uuid
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_cors import CORS
 #load environment variables from .env
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
 
 #set up Gemini model with API key
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -93,10 +94,39 @@ def speak():
         print(" Exception occurred:", e)
         return jsonify({"error": str(e)}), 500
     
+@app.route("/save", methods=["POST"])
+def save_simplification():
+    data = request.json
+    print("Payload received at /save:", data)
+
+    session_id = data.get("sessionId", "anonymous")
+    original = data.get("text", "")
+    note = data.get("note", "") 
+    page_url = data.get("url", "")
+
+    if not original and not note:
+        return jsonify({"error": "Missing content to save."}), 400
+
+    try:
+        #save general content to MongoDB
+        collection.insert_one({
+            "sessionId": session_id,
+            "text": original,
+            "note": note,
+            "url": page_url,
+            "timestamp": datetime.now(timezone.utc)
+        })
+        return jsonify({"message": "Text saved successfully."})
+
+    except Exception as e:
+        print("error as ", e)
+        return jsonify({"error": str(e)}), 500
+
+
 #route to get history of simplifications
 @app.route("/history", methods=["GET"])
 def get_history():
-    try: 
+    try:
         session_id = request.args.get("sessionId", "anonymous")
         history = list(
             collection.find({"sessionId": session_id})
@@ -109,7 +139,7 @@ def get_history():
             h["_id"] = str(h["_id"])
 
         return jsonify(history)
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -120,5 +150,7 @@ def clear_history():
     collection.delete_many({"sessionId": session_id})
     return jsonify({"message": "History cleared."})
 
+
 if __name__ == "__main__":
     app.run(port=5000)
+
