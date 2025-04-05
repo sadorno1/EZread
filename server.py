@@ -163,8 +163,33 @@ def get_history():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/get-saved-texts", methods=["GET"])
+def get_saved_texts():
+    try:
+        session_id = request.args.get("sessionId", "anonymous")
+        print(f"Fetching texts for session: {session_id}")  # Debug print
+        
+        saved_texts = list(
+            collection.find(
+                {"sessionId": session_id, "text": {"$exists": True}}
+            ).sort("timestamp", -1)
+        )
+        
+        print(f"Found {len(saved_texts)} texts")  # Debug print
+        
+        # Serialize ObjectId for JSON
+        for text in saved_texts:
+            text["_id"] = str(text["_id"])
+            text["timestamp"] = text["timestamp"].isoformat()
+            
+        print("Returning texts:", saved_texts)  # Debug print
+        return jsonify(saved_texts)
 
-
+    except Exception as e:
+        print("Error in get-saved-texts:", e)  # Debug print
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
 
