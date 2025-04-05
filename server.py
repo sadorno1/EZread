@@ -8,6 +8,7 @@ from google.cloud import texttospeech
 import uuid
 from pymongo import MongoClient
 from datetime import datetime
+from flask_cors import CORS
 
 #load environment variables from .env
 load_dotenv()
@@ -21,6 +22,7 @@ client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["ezread"]
 collection = db["simplifications"]
 app = Flask(__name__)
+CORS(app)
 
 #root route to check if its running
 @app.route("/")
