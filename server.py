@@ -42,16 +42,7 @@ def simplify_text():
         response = model.generate_content(prompt)
         simplified = response.text
 
-        #save to MongoDB
-        collection.insert_one({
-            "sessionId": session_id,
-            "text": user_text,
-            "simplified": simplified,
-            "url": page_url,
-            "timestamp": datetime.utcnow()
-        })
-
-        return jsonify({"simplified": response.text})
+        return jsonify({"simplified": simplified})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -120,6 +111,30 @@ def speak():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#route to save things to read later
+@app.route("/save", methods=["POST"])
+def save_simplification():
+    data = request.json
+    session_id = data.get("sessionId", "anonymous")
+    text = data.get("text", "")
+    simplified = data.get("simplified", "")
+    page_url = data.get("url", "")
+
+    if not text or not simplified:
+        return jsonify({"error": "Missing text or simplified content"}), 400
+
+    try:
+        collection.insert_one({
+            "sessionId": session_id,
+            "text": text,
+            "simplified": simplified,
+            "url": page_url,
+            "timestamp": datetime.utcnow()
+        })
+        return jsonify({"message": "Saved for later."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 #route to get history of simplifications
 @app.route("/history", methods=["GET"])
 def get_history():
@@ -140,12 +155,12 @@ def get_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-        
-    @app.route("/clear-history", methods=["POST"])
-    def clear_history():
-        session_id = request.json.get("sessionId", "anonymous")
-        collection.delete_many({"sessionId": session_id})
-        return jsonify({"message": "History cleared."})
+#route to clear saved later
+@app.route("/clear-history", methods=["POST"])
+def clear_history():
+    session_id = request.json.get("sessionId", "anonymous")
+    collection.delete_many({"sessionId": session_id})
+    return jsonify({"message": "History cleared."})
 
 if __name__ == "__main__":
     app.run(port=5000)
