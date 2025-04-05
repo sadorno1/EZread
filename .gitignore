@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+dist/
+build/
+
+# Environment
+.env
+venv/
+.venv/
+
+
