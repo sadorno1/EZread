@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "EZRead",
+  "version": "1.0.0",
+  "description": "A simple dark mode extension",
+  "icons": {
+    "32": "icons/32x32.png",
+    "48": "icons/48x48.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "32": "icons/32x32.png",
+      "48": "icons/48x48.png"
+    }
+  },
+  "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}
