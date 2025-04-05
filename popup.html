@@ -2,9 +2,11 @@
 <html>
 <head>
     <title>EZRead</title>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <style>
         body {
             width: 200px;
+            height: 250px;
             padding: 10px;
         }
         button {
@@ -16,15 +18,40 @@
         button:hover {
             filter: brightness(90%);
         }
+        button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        lottie-player {
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+            display: block;
+        }
 
     </style>
 </head>
 <body>
-    <button id="darkModeButton" >Dark Mode/Light Mode</button>
+  <h3> Welcome to EzRead: Your all-in-one reading assistant! </h3>
+  <p> Simplify complex text, listen to content, save important notes, and customize your reading 
+      experience with dark mode and a dyslexia-friendly font option.
+  </p>
+
+  <div id="lottie-animation"></div>
+
+    <button id="darkModeButton">Dark Mode/Light Mode</button>
     <script src="popup.js"></script>
 
     <button id="fontSelect">Accessible Font</button>
     <script src="font.js"></script>
 
+    <lottie-player
+        src="animal.json"
+        background="transparent"
+        speed="1"
+        style="width: 100px; height: 100px;"
+        loop
+        autoplay>
+    </lottie-player>
 </body>
 </html>
