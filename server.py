@@ -5,6 +5,8 @@ import os
 import google.generativeai as genai
 from gtts import gTTS
 import uuid
+from pymongo import MongoClient
+from datetime import datetime
 
 #load environment variables from .env
 load_dotenv()
@@ -13,6 +15,10 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
 
+#load Mongo URI
+client = MongoClient(os.getenv("MONGODB_URI"))
+db = client["ezread"]
+collection = db["simplifications"]
 app = Flask(__name__)
 
 #root route to check if its running
@@ -25,12 +31,25 @@ def home():
 def simplify_text():
     data = request.json
     user_text = data.get("text", "")
+    session_id = data.get("sessionId", "anonymous")
+    page_url = data.get("url", "")
 
-    # Prompt sent to Gemini
+    #prompt sent to Gemini
     prompt = f"Rewrite this in plain English for someone with ADHD or dyslexia:\n\n{user_text}"
 
     try:
         response = model.generate_content(prompt)
+        simplified = response.text
+
+        #save to MongoDB
+        collection.insert_one({
+            "sessionId": session_id,
+            "text": user_text,
+            "simplified": simplified,
+            "url": page_url,
+            "timestamp": datetime.utcnow()
+        })
+
         return jsonify({"simplified": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -63,3 +82,26 @@ def speak():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+#route to get history of simplifications
+@app.route("/history", methods=["GET"])
+def get_history():
+    try: 
+        session_id = request.args.get("sessionId", "anonymous")
+        history = list(
+            collection.find({"sessionId": session_id})
+            .sort("timestamp", -1)
+            .limit(10)
+        )
+
+        #serialize ObjectId for JSON
+        for h in history:
+            h["_id"] = str(h["_id"])
+
+        return jsonify(history)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(port=5000)
