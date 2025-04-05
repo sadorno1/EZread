@@ -143,14 +143,6 @@ def get_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#route to clear saved later
-@app.route("/clear-history", methods=["POST"])
-def clear_history():
-    session_id = request.json.get("sessionId", "anonymous")
-    collection.delete_many({"sessionId": session_id})
-    return jsonify({"message": "History cleared."})
-
-
 if __name__ == "__main__":
     app.run(port=5000)
 

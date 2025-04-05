@@ -282,9 +282,9 @@ async function simplifySelectedText(text) {
       }
   
       const result = await response.json();
-      console.log("✅ Saved:", result.message);
+      console.log(" Saved:", result.message);
     } catch (err) {
-      console.error("❌ Error saving text:", err);
+      console.error("Error saving text:", err);
     }
   }
   
