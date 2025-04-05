@@ -1,79 +1,133 @@
-console.log('Content script loaded!');
+console.log('Content script loaded - EZRead v1.0');
 
-// Listen for text selection
 document.addEventListener('mouseup', function(e) {
-    console.log('Mouse up detected');
+    console.log('Mouse up event detected');
     
-    // Don't trigger if we're clicking the button itself
-    if (e.target.id === 'simplifyButton') {
+    // Don't trigger if we're clicking inside the toolbar
+    if (e.target.closest('#ezread-toolbar')) {
+        console.log('Clicked inside toolbar - ignoring');
         return;
     }
 
-    // Small delay to ensure selection is complete
     setTimeout(() => {
         const selection = window.getSelection();
         const selectedText = selection.toString().trim();
         console.log('Selected text:', selectedText);
         
         if (selectedText.length > 0) {
-            showSimplifyButton(e.clientX, e.clientY, selectedText);
+            const rect = selection.getRangeAt(0).getBoundingClientRect();
+            const toolbarX = rect.left + window.scrollX;
+            const toolbarY = rect.bottom + window.scrollY;
+            showToolbar(toolbarX, toolbarY, selectedText);
         }
     }, 100);
 });
 
-function showSimplifyButton(x, y, selectedText) {
-    console.log('Showing button');
-    // Remove any existing button
-    removeExistingButton();
-
-    // Create the button
+function createButton(icon, text, onClick) {
     const button = document.createElement('button');
-    button.textContent = 'Simplify';
-    button.id = 'simplifyButton';
     button.style.cssText = `
-        position: fixed;
-        z-index: 999999;
-        top: ${y + 10}px;
-        left: ${x}px;
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
+        padding: 5px 10px;
+        margin: 0 5px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 14px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 5px;
     `;
 
-    // Add click handler
-    button.addEventListener('click', async (e) => {
+    const iconSpan = document.createElement('span');
+    iconSpan.textContent = icon;
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+
+    button.appendChild(iconSpan);
+    button.appendChild(textSpan);
+
+    button.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Button clicked');
-        await simplifySelectedText(selectedText);
-        removeExistingButton();
+        onClick();
     });
 
-    // Add to page
-    document.body.appendChild(button);
+    button.addEventListener('mouseover', () => {
+        button.style.backgroundColor = '#e0e0e0';
+    });
 
-    // Remove button when clicking elsewhere
+    button.addEventListener('mouseout', () => {
+        button.style.backgroundColor = '#f0f0f0';
+    });
+
+    return button;
+}
+
+function showToolbar(x, y, selectedText) {
+    console.log('Showing toolbar');
+    removeExistingToolbar();
+
+    const toolbar = document.createElement('div');
+    toolbar.id = 'ezread-toolbar';
+    toolbar.style.cssText = `
+        position: fixed;
+        z-index: 999999;
+        top: ${y}px;
+        left: ${x}px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex;
+        gap: 5px;
+    `;
+
+    // Add Simplify button
+    toolbar.appendChild(
+        createButton('🔄', 'Simplify', async () => {
+            console.log('Simplify clicked');
+            await simplifySelectedText(selectedText);
+        })
+    );
+
+    // Add Read Aloud button
+    toolbar.appendChild(
+        createButton('🔊', 'Read', () => {
+            console.log('Read clicked');
+            speakText(selectedText);
+        })
+    );
+
+    // Add Save button
+    toolbar.appendChild(
+        createButton('💾', 'Save', () => {
+            console.log('Save clicked');
+            saveText(selectedText);
+        })
+    );
+
+    document.body.appendChild(toolbar);
+    console.log('Toolbar added to page');
+
+    // Remove toolbar when clicking outside
     document.addEventListener('mousedown', function handler(e) {
-        if (e.target !== button) {
-            removeExistingButton();
+        if (!toolbar.contains(e.target)) {
+            removeExistingToolbar();
             document.removeEventListener('mousedown', handler);
         }
     });
 }
 
-function removeExistingButton() {
-    const existingButton = document.getElementById('simplifyButton');
-    if (existingButton) {
-        existingButton.remove();
+function removeExistingToolbar() {
+    const existingToolbar = document.getElementById('ezread-toolbar');
+    if (existingToolbar) {
+        existingToolbar.remove();
     }
 }
 
 async function simplifySelectedText(text) {
+    console.log('Starting text simplification');
     try {
         // Show loading state
         const selection = window.getSelection();
@@ -83,8 +137,7 @@ async function simplifySelectedText(text) {
         range.deleteContents();
         range.insertNode(loadingSpan);
 
-        console.log('Sending text to backend:', text);
-        
+        console.log('Sending request to backend');
         const response = await fetch('http://127.0.0.1:5000/simplify', {
             method: 'POST',
             headers: {
@@ -99,26 +152,25 @@ async function simplifySelectedText(text) {
             })
         });
 
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Received simplified text:', data.simplified);
+        console.log('Received response:', data);
         loadingSpan.textContent = data.simplified;
 
     } catch (error) {
-        console.error('Error:', error);
-        // Show error message in the text
+        console.error('Error in simplifySelectedText:', error);
         const errorSpan = document.createElement('span');
-        errorSpan.textContent = 'Error: Could not connect to server. Check if Flask is running.';
+        errorSpan.textContent = `Error: ${error.message}. Is the server running?`;
         errorSpan.style.color = 'red';
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
         range.deleteContents();
         range.insertNode(errorSpan);
         
-        // Revert to original text after 3 seconds
         setTimeout(() => {
             range.deleteContents();
             range.insertNode(document.createTextNode(text));
@@ -126,93 +178,50 @@ async function simplifySelectedText(text) {
     }
 }
 
+async function speakText(text) {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/speak', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: text })
+        });
 
-let ttsButton;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-document.addEventListener("mouseup", () => {
-  const selectedText = window.getSelection().toString().trim();
-
-  //remove any existing button
-  if (ttsButton) ttsButton.remove();
-
-  if (selectedText.length > 0) {
-    const range = window.getSelection().getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    //create floating button
-    ttsButton = document.createElement("button");
-    ttsButton.innerText = "🔊";
-    ttsButton.style.position = "fixed";
-    ttsButton.style.top = `${rect.top + window.scrollY - 40}px`;
-    ttsButton.style.left = `${rect.left + window.scrollX}px`;
-    ttsButton.style.zIndex = 9999;
-    ttsButton.style.padding = "6px 10px";
-    ttsButton.style.fontSize = "13px";
-    ttsButton.style.background = "#1e88e5";
-    ttsButton.style.color = "#fff";
-    ttsButton.style.border = "none";
-    ttsButton.style.borderRadius = "5px";
-    ttsButton.style.cursor = "pointer";
-    ttsButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.3)";
-    ttsButton.style.transition = "opacity 0.3s ease";
-
-    document.body.appendChild(ttsButton);
-
-    ttsButton.addEventListener("click", () => {
-      readSelectedText(selectedText);
-      ttsButton.remove();
-    });
-  }
-});
-
-async function readSelectedText(text) {
-  const res = await fetch("http://localhost:5000/speak", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
-
-  const timepointsJSON = res.headers.get("X-Timepoints");
-  const timepoints = JSON.parse(timepointsJSON);
-  const audioBlob = await res.blob();
-  const audio = new Audio(URL.createObjectURL(audioBlob));
-  audio.play();
-  audio.onplay = () => console.log("Audio is playing");
-  audio.onerror = e => console.error("Audio error:", e);
-
-
-  //create highlight spans
-  const spanWords = text.split(" ").map((word, i) =>
-    `<span class="ezread-word" id="ezread-word-${i}">${word}</span>`
-  ).join(" ");
-
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  const range = selection.getRangeAt(0);
-
-  range.deleteContents();
-  const wrapper = document.createElement("span");
-  wrapper.innerHTML = spanWords;
-  range.insertNode(wrapper);
-
-  //sync highlighting with timepoints
-  timepoints.forEach(({ mark, time }) => {
-    const wordIndex = parseInt(mark.replace("w", ""));
-    setTimeout(() => {
-      document.querySelectorAll(".ezread-word").forEach(w => w.classList.remove("highlight"));
-      const el = document.getElementById(`ezread-word-${wordIndex}`);
-      if (el) el.classList.add("highlight");
-    }, time * 1000);
-  });
+        const blob = await response.blob();
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.play();
+    } catch (error) {
+        console.error('Error in text-to-speech:', error);
+        alert('Error: Could not convert text to speech');
+    }
 }
 
-//highlight style
-const style = document.createElement("style");
-style.innerHTML = `
-  .ezread-word.highlight {
-    background-color: #cbe3ff;
-    border-radius: 4px;
-    padding: 1px 3px;
-  }
-`;
-document.head.appendChild(style);
+async function saveText(text) {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                url: window.location.href
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert('Text saved successfully!');
+    } catch (error) {
+        console.error('Error saving text:', error);
+        alert('Error: Could not save text');
+    }
+}
