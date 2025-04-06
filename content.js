@@ -143,11 +143,16 @@ function removeExistingToolbar() {
     existingToolbar.remove();
   }
 }
+async function getSimplificationLevel() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['simplifyLevel'], (result) => {
+      resolve(result.simplifyLevel || 2); 
+    });
+  });
+}
 
 // Call backend to simplify selected text
 async function simplifySelectedText(text) {
-  console.log('Starting text simplification');
-
   try {
     const selection = window.getSelection();
     const range = selection.getRangeAt(0);
@@ -157,6 +162,8 @@ async function simplifySelectedText(text) {
 
     range.deleteContents();
     range.insertNode(loadingSpan);
+    const level = await getSimplificationLevel();
+    console.log(" Using simplification level:", level);
 
     const response = await fetch('http://127.0.0.1:5000/simplify', {
       method: 'POST',
@@ -167,7 +174,7 @@ async function simplifySelectedText(text) {
       mode: 'cors',
       body: JSON.stringify({
         text: text,
-        level: 2,
+        level: level,
         sessionId: 'test-session',
         url: window.location.href
       })
