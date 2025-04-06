@@ -18,6 +18,7 @@
     }
 
     .saved-text {
+      position: relative;  
       background: white;
       border-radius: 10px;
       padding: 15px;
@@ -25,6 +26,32 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       transition: transform 0.2s;
     }
+    .delete-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #ff6b6b;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    line-height: 1;  /* This helps center the × vertically */
+    padding-bottom: 2px;  /* Fine-tune the × position */
+}
+
+.delete-button:hover {
+    background-color: #ff5252;
+    transform: scale(1.1);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
 
     .saved-text:hover {
       transform: translateY(-2px);
@@ -74,6 +101,27 @@
       border-radius: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+
+    .saved-text {
+    position: relative;
+}
+
+.delete-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.delete-button:hover {
+    background-color: #ff5252;
+}
 
     ::-webkit-scrollbar {
       width: 8px;

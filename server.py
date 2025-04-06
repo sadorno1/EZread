@@ -219,6 +219,21 @@ def get_saved_texts():
         print("Error in get-saved-texts:", e)  
         return jsonify({"error": str(e)}), 500
     
+@app.route("/delete/<text_id>", methods=["DELETE"])
+def delete_text(text_id):
+    try:
+        from bson.objectid import ObjectId
+        result = collection.delete_one({"_id": ObjectId(text_id)})
+        
+        if result.deleted_count > 0:
+            return jsonify({"message": "Text deleted successfully"})
+        else:
+            return jsonify({"error": "Text not found"}), 404
+
+    except Exception as e:
+        print("Error deleting text:", e)
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == "__main__":
     app.run(port=5000)
 
