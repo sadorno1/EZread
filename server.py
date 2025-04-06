@@ -38,15 +38,29 @@ def simplify_text():
     user_text = data.get("text", "")
     session_id = data.get("sessionId", "anonymous")
     page_url = data.get("url", "")
+    simplification_level = int(data.get("level", 2))  
 
-    #prompt sent to Gemini
-    prompt = f"Rewrite this in simple English for someone with ADHD or dyslexia:\n\n{user_text}"
+    # Define prompts for different simplification levels
+    simplification_prompts = {
+        1: ("Make this text slightly simpler while preserving the original structure and most "
+            "key terms. Only simplify complex sentence structures:\n\n{text}"),
+        2: ("Rewrite this in clear, straightforward English suitable for someone with ADHD or "
+            "dyslexia. Break up long sentences and replace uncommon words with simpler "
+            "alternatives:\n\n{text}"),
+        3: ("Explain this in the simplest terms possible. Use common words only, "
+            " and add clear examples if helpful. Make it extremely accessible "
+            "for neurodiverse readers but dont be condescending please:\n\n{text}")
+    }
+
+    # Get the appropriate prompt based on simplification level
+    prompt = simplification_prompts.get(simplification_level, simplification_prompts[2]).format(text=user_text)
 
     try:
         response = model.generate_content(prompt)
-        simplified = response.text
-
-        return jsonify({"simplified": simplified})
+        return jsonify({
+            "simplified": response.text,
+            "level": simplification_level  # Echo back the level used
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -167,6 +167,7 @@ async function simplifySelectedText(text) {
       mode: 'cors',
       body: JSON.stringify({
         text: text,
+        level: 2,
         sessionId: 'test-session',
         url: window.location.href
       })

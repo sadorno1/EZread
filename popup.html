@@ -217,19 +217,16 @@
         }
         
         .preset-btn {
-            flex: 1;
-            padding: 6px;
-            font-size: 11px;
-            border-radius: 4px;
-            background: #f1f3f4;
-            border: 1px solid #dadce0;
-            min-width: 80px;
-        }
-        
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          background: #f5f5f5;
+          cursor: pointer;
+      }
+
         .preset-btn.active {
-            background: #e8f0fe;
-            border-color: #d2e3fc;
-            color: var(--primary-color);
+            background: #4285f4;
+            color: white;
+            border-color: #4285f4;
         }
     </style>
 </head>
@@ -264,7 +261,7 @@
         </button>
     </div>
 
-    <div class="config-popup" id="configPopup">
+    <div class="config-popup" id="configPopup" style="display:none;">
         <button class="close-config" id="closeConfig">
             <i class="fas fa-times"></i>
         </button>
@@ -281,20 +278,19 @@
                 <input type="range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1.0">
                 <span>Fast</span>
             </div>
-        </div>
+                <!-- Simplified Text Simplification Control -->
         
-        <!-- Simplified Text Simplification Control -->
-        <div class="config-option">
-            <label>
-                <i class="fas fa-text-width"></i> Text Simplification
-            </label>
-            <div class="simplify-presets">
-                <button class="preset-btn" data-level="light">Minimal</button>
-                <button class="preset-btn active" data-level="medium">Balanced</button>
-                <button class="preset-btn" data-level="strong">Maximum</button>
-            </div>
-        </div>
     </div>
+    <div class="config-option">
+      <label><i class="fas fa-text-width"></i> Simplification Level</label>
+      <div class="simplify-presets">
+          <button class="preset-btn" data-level="1">Minimal</button>
+          <button class="preset-btn active" data-level="2">Balanced</button>
+          <button class="preset-btn" data-level="3">Maximum</button>
+      </div>
+  </div>
+        </div>
+      
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -362,6 +358,7 @@
     <!-- Other scripts -->
     <script src="popup.js"></script>
     <script src="font.js"></script>
+    <script src="config.js"></script>
 </body>
 </html>
 
