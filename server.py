@@ -9,6 +9,8 @@ import uuid
 from pymongo import MongoClient
 from datetime import datetime, timezone
 from flask_cors import CORS
+from bson.objectid import ObjectId
+
 #load environment variables from .env
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -21,8 +23,9 @@ model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
 client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["ezread"]
 collection = db["simplifications"]
+
+#create flask app
 app = Flask(__name__)
-CORS(app)
 CORS(app, expose_headers=["X-Timepoints"])
 
 
@@ -36,8 +39,6 @@ def home():
 def simplify_text():
     data = request.json
     user_text = data.get("text", "")
-    session_id = data.get("sessionId", "anonymous")
-    page_url = data.get("url", "")
     simplification_level = int(data.get("level", 2))  
 
     # Define prompts for different simplification levels
@@ -59,12 +60,12 @@ def simplify_text():
         response = model.generate_content(prompt)
         return jsonify({
             "simplified": response.text,
-            "level": simplification_level  # Echo back the level used
+            "level": simplification_level 
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#route to convert text to speech and return an MP3 file
+#route to convert text to speech and return an MP3 file and timepoints marks
 @app.route("/speak", methods=["POST"])
 def speak():
     data = request.json
@@ -109,6 +110,7 @@ def speak():
             for tp in response.timepoints
         ]
 
+        #once it finishes using it
         @after_this_request
         def cleanup(response):
             try:
@@ -133,7 +135,8 @@ def speak():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+#route to save text for later
 @app.route("/save", methods=["POST"])
 def save_simplification():
     data = request.json
@@ -160,16 +163,16 @@ def save_simplification():
         return jsonify({"error": str(e)}), 500
 
 
-#route to get history of simplifications
+#route to get history of saved laters
 @app.route("/history", methods=["GET"])
 def get_history():
     try:
         session_id = request.args.get("sessionId", "anonymous")
-        print(f"Fetching history for session: {session_id}")  # Debug print
+        print(f"Fetching history for session: {session_id}")  
         
-        # First, check what's in the collection
+        # Check what's in the collection
         all_docs = list(collection.find({}))
-        print(f"Total documents in collection: {len(all_docs)}")  # Debug print
+        print(f"Total documents in collection: {len(all_docs)}")  
         
         history = list(
             collection.find({"sessionId": session_id})
@@ -177,7 +180,7 @@ def get_history():
             .limit(10)
         )
         
-        print(f"Found {len(history)} documents for this session")  # Debug print
+        print(f"Found {len(history)} documents for this session") 
         
         # Print first document to see its structure
         if history:
@@ -190,39 +193,13 @@ def get_history():
         return jsonify(history)
 
     except Exception as e:
-        print("Error in get_history:", e)  # Debug print
+        print("Error in get_history:", e)  
         return jsonify({"error": str(e)}), 500
     
-@app.route("/get-saved-texts", methods=["GET"])
-def get_saved_texts():
-    try:
-        session_id = request.args.get("sessionId", "anonymous")
-        print(f"Fetching texts for session: {session_id}") 
-        
-        saved_texts = list(
-            collection.find(
-                {"sessionId": session_id, "text": {"$exists": True}}
-            ).sort("timestamp", -1)
-        )
-        
-        print(f"Found {len(saved_texts)} texts")  
-        
-        # Serialize ObjectId for JSON
-        for text in saved_texts:
-            text["_id"] = str(text["_id"])
-            text["timestamp"] = text["timestamp"].isoformat()
-            
-        print("Returning texts:", saved_texts)  
-        return jsonify(saved_texts)
-
-    except Exception as e:
-        print("Error in get-saved-texts:", e)  
-        return jsonify({"error": str(e)}), 500
-    
+#route to delete a saved simplification
 @app.route("/delete/<text_id>", methods=["DELETE"])
 def delete_text(text_id):
     try:
-        from bson.objectid import ObjectId
         result = collection.delete_one({"_id": ObjectId(text_id)})
         
         if result.deleted_count > 0:
@@ -233,7 +210,8 @@ def delete_text(text_id):
     except Exception as e:
         print("Error deleting text:", e)
         return jsonify({"error": str(e)}), 500
-    
+
+# run app
 if __name__ == "__main__":
     app.run(port=5000)
 

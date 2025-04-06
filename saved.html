@@ -1,151 +1,146 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Saved Texts - EZRead</title>
     <style>
+      /* basic body styling */
       body {
         width: 400px;
         padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #f8f9fa;
-    }
+      }
 
-    h2 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
+      /* heading styles */
+      h2 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
 
-    .saved-text {
-      position: relative;  
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-    .delete-button {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background-color: #ff6b6b;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    line-height: 1;  /* This helps center the × vertically */
-    padding-bottom: 2px;  /* Fine-tune the × position */
-}
+      /* saved text card container */
+      .saved-text {
+        position: relative;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+      }
 
-.delete-button:hover {
-    background-color: #ff5252;
-    transform: scale(1.1);
-    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-}
+      /* delete button on top-right of each card */
+      .delete-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background-color: #ff6b6b;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        line-height: 1;
+        padding-bottom: 2px;
+      }
 
-    .saved-text:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
+      /* delete button hover effect */
+      .delete-button:hover {
+        background-color: #ff5252;
+        transform: scale(1.1);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      }
 
-    .text-content {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #34495e;
-      margin-bottom: 10px;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 5px;
-      border-left: 4px solid #b4cef1;
-    }
+      /* saved text card hover effect */
+      .saved-text:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
 
-    .text-url {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 5px;
-    }
+      /* main content block of the saved text */
+      .text-content {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #34495e;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #b4cef1;
+      }
 
-    .text-date {
-      font-size: 11px;
-      color: #999;
-    }
+      /* source url under the text */
+      .text-url {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 5px;
+      }
 
-    .text-note {
-      margin-top: 8px;
-      padding: 8px;
-      background: #fff3cd;
-      border-radius: 4px;
-      font-size: 13px;
-      color: #856404;
-    }
+      /* date of the saved note */
+      .text-date {
+        font-size: 11px;
+        color: #999;
+      }
 
-    #titled{
-      color: #2c3e50;
-    }
-    
-    .no-texts {
-      text-align: center;
-      color: #666;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+      /* optional user note section */
+      .text-note {
+        margin-top: 8px;
+        padding: 8px;
+        background: #fff3cd;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #856404;
+      }
 
-    .saved-text {
-    position: relative;
-}
+      /* heading color override */
+      #titled {
+        color: #2c3e50;
+      }
 
-.delete-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: #ff6b6b;
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
-}
+      /* fallback for when no texts are found */
+      .no-texts {
+        text-align: center;
+        color: #666;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
 
-.delete-button:hover {
-    background-color: #ff5252;
-}
+      /* scrollbar customization */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
 
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
 
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
+      ::-webkit-scrollbar-thumb {
+        background: #b4cef1;
+        border-radius: 4px;
+      }
 
-    ::-webkit-scrollbar-thumb {
-      background: #b4cef1;
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
+      ::-webkit-scrollbar-thumb:hover {
         background: #90d2ba;
-    }
-      </style>
+      }
+    </style>
   </head>
-
-<body>
-  <h2 id = 'titled'>Your Saved Notes</h2>
-  <div id="saved-texts-container"></div>
-  <script src="saved.js"></script>
-</body>
+  <body>
+    <!-- page heading -->
+    <h2 id="titled">Your Saved Notes</h2>
+    <!-- container for dynamically loaded saved notes -->
+    <div id="saved-texts-container"></div>
+    <!-- load javascript for saved note logic -->
+    <script src="saved.js"></script>
+  </body>
 </html>

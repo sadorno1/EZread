@@ -1,365 +1,370 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>EZRead</title>
+    <!-- import font awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #4285f4;
-            --secondary-color: #34a853;
-            --accent-color: #ea4335;
-            --pink-accent: #ff85a2;
-            --text-color: #202124;
-            --light-gray: #f1f3f4;
-            --border-radius: 8px;
-            --button-border: 1px solid #000000;
-        }
-        
-        body {
-            width: 300px;
-            padding: 15px;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: white;
-            color: var(--text-color);
-            margin: 0;
-            line-height: 1.5;
-            position: relative;
-        }
-        
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            gap: 12px;
-        }
-        
-        .logo {
-            width: 32px;
-            height: 32px;
-            object-fit: contain;
-        }
-        
-        h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-color);
-            flex-grow: 1;
-        }
-        
-        .config-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #5f6368;
-            font-size: 14px;
-            padding: 4px;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .config-btn:hover {
-            background-color: var(--light-gray);
-        }
-        
-        .intro-text {
-            font-size: 13px;
-            margin-bottom: 16px;
-            color: #5f6368;
-        }
-        
-        .separator {
-            border: 0;
-            height: 1px;
-            background-color: #dadce0;
-            margin: 16px 0;
-        }
-        
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        button {
-            width: 100%;
-            padding: 10px 12px;
-            border: var(--button-border);
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        button i {
-            width: 16px;
-            text-align: center;
-        }
-        
-        #darkModeButton {
-            background-color: #ff85a2;
-            color: white;
-            border: var(--button-border);
-        }
-        
-        #darkModeButton:hover {
-            background-color: #ff6b8b;
-        }
-        
-        #fontSelect {
-            background-color: #b4cef1;
-            color: var(--text-color);
-            border: var(--button-border);
-        }
-        
-        #fontSelect:hover {
-            background-color: #9bbcec;
-        }
-        
-        #viewSaved {
-            background-color: #90d2ba;
-            color: var(--text-color);
-            border: var(--button-border);
-        }
-        
-        #viewSaved:hover {
-            background-color: #7dc7ad;
-        }
-        
-        u {
-            text-decoration: underline;
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-
-        .config-popup {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 15px;
-            background: white;
-            border: var(--button-border);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            width: 260px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            z-index: 100;
-            text-align: center;
-        }
-        
-        .config-popup h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .config-option {
-            margin-bottom: 16px;
-        }
-        
-        .config-option label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 13px;
-        }
-        
-        .slider-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .slider-value {
-            min-width: 40px;
-            text-align: center;
-            font-size: 12px;
-            color: #5f6368;
-        }
-        
-        input[type="range"] {
-            flex-grow: 1;
-            height: 4px;
-            cursor: pointer;
-        }
-        
-        .close-config {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #5f6368;
-        }
-        
-        .simplify-presets {
-            display: flex;
-            gap: 8px;
-            margin-top: 5px;
-            justify-content: center;
-        }
-        
-        .preset-btn {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          background: #f5f5f5;
-          cursor: pointer;
+      /* define color and layout variables */
+      :root {
+        --primary-color: #4285f4;
+        --secondary-color: #34a853;
+        --accent-color: #ea4335;
+        --pink-accent: #ff85a2;
+        --text-color: #202124;
+        --light-gray: #f1f3f4;
+        --border-radius: 8px;
+        --button-border: 1px solid #000000;
       }
 
-        .preset-btn.active {
-            background: #4285f4;
-            color: white;
-            border-color: #4285f4;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <img src="icons/32x32.png" alt="EZRead Logo" class="logo">
-        <h3>EZRead</h3>
-        <button class="config-btn" title="Settings" id="configButton">
-            <i class="fas fa-cog"></i>
-        </button>
-    </div>
-    
-    <p class="intro-text">
-        Simplify <u>complex</u> text, listen to content, save <u>important</u> notes, and <u>customize</u> your reading 
-        experience with dark mode and a <u>dyslexia-friendly</u> font option.
-    </p>
-    
-    <hr class="separator">
-    
-    <div class="button-container">
-        <button id="darkModeButton">
-            <i class="fas fa-moon"></i>
-            <span>Dark Mode</span>
-        </button>
-        <button id="fontSelect">
-            <i class="fas fa-font"></i>
-            <span>Accessible Font</span>
-        </button>
-        <button id="viewSaved">
-            <i class="fas fa-bookmark"></i>
-            <span>View Saved Texts</span>
-        </button>
-    </div>
+      /* basic body styling */
+      body {
+        width: 300px;
+        padding: 15px;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        background-color: white;
+        color: var(--text-color);
+        margin: 0;
+        line-height: 1.5;
+        position: relative;
+      }
 
-    <div class="config-popup" id="configPopup" style="display:none;">
-        <button class="close-config" id="closeConfig">
-            <i class="fas fa-times"></i>
-        </button>
-        <h4>Advanced Settings</h4>
-        
-        <!-- Voice Speed Control -->
-        <div class="config-option">
-            <label for="voiceSpeed">
-                <i class="fas fa-tachometer-alt"></i> Speech Rate
-                <span class="slider-value" id="speedValue">1.0x</span>
-            </label>
-            <div class="slider-control">
-                <span>Slow</span>
-                <input type="range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1.0">
-                <span>Fast</span>
-            </div>
-                <!-- Simplified Text Simplification Control -->
-        
+      /* header layout and spacing */
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 12px;
+      }
+
+      /* logo image styling */
+      .logo {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+
+      /* app title */
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-color);
+        flex-grow: 1;
+      }
+
+      /* config (gear) button styles */
+      .config-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #5f6368;
+        font-size: 14px;
+        padding: 4px;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .config-btn:hover {
+        background-color: var(--light-gray);
+      }
+
+      /* subtitle text */
+      .intro-text {
+        font-size: 13px;
+        margin-bottom: 16px;
+        color: #5f6368;
+      }
+
+      /* horizontal separator */
+      .separator {
+        border: 0;
+        height: 1px;
+        background-color: #dadce0;
+        margin: 16px 0;
+      }
+
+      /* button group container */
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* base button style */
+      button {
+        width: 100%;
+        padding: 10px 12px;
+        border: var(--button-border);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      button i {
+        width: 16px;
+        text-align: center;
+      }
+
+      /* dark mode button */
+      #darkModeButton {
+        background-color: #ff85a2;
+        color: white;
+        border: var(--button-border);
+      }
+
+      #darkModeButton:hover {
+        background-color: #ff6b8b;
+      }
+
+      /* accessible font toggle */
+      #fontSelect {
+        background-color: #b4cef1;
+        color: var(--text-color);
+        border: var(--button-border);
+      }
+
+      #fontSelect:hover {
+        background-color: #9bbcec;
+      }
+
+      /* saved text button */
+      #viewSaved {
+        background-color: #90d2ba;
+        color: var(--text-color);
+        border: var(--button-border);
+      }
+
+      #viewSaved:hover {
+        background-color: #7dc7ad;
+      }
+
+      /* underlined callout text */
+      u {
+        text-decoration: underline;
+        font-weight: 500;
+        color: var(--primary-color);
+      }
+
+      /* configuration popup panel */
+      .config-popup {
+        display: none;
+        position: absolute;
+        top: 50px;
+        right: 15px;
+        background: white;
+        border: var(--button-border);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        width: 260px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        text-align: center;
+      }
+
+      /* header inside config popup */
+      .config-popup h4 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+        font-size: 14px;
+      }
+
+      /* section inside config popup */
+      .config-option {
+        margin-bottom: 16px;
+      }
+
+      .config-option label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 13px;
+      }
+
+      /* slider control layout */
+      .slider-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* numeric value next to slider */
+      .slider-value {
+        min-width: 40px;
+        text-align: center;
+        font-size: 12px;
+        color: #5f6368;
+      }
+
+      input[type="range"] {
+        flex-grow: 1;
+        height: 4px;
+        cursor: pointer;
+      }
+
+      /* close button inside config */
+      .close-config {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        color: #5f6368;
+      }
+
+      /* button group for simplify level */
+      .simplify-presets {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+        justify-content: center;
+      }
+
+      .preset-btn {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: #f5f5f5;
+        cursor: pointer;
+      }
+
+      .preset-btn.active {
+        background: #4285f4;
+        color: white;
+        border-color: #4285f4;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- top header with logo, title, and settings button -->
+    <div class="header">
+      <img src="icons/32x32.png" alt="EZRead Logo" class="logo">
+      <h3>EZRead</h3>
+      <button class="config-btn" title="Settings" id="configButton">
+        <i class="fas fa-cog"></i>
+      </button>
     </div>
-    <div class="config-option">
-      <label><i class="fas fa-text-width"></i> Simplification Level</label>
-      <div class="simplify-presets">
+    <!-- introduction text with callouts -->
+    <p class="intro-text"> Simplify <u>complex</u> text, listen to content, save <u>important</u> notes, and <u>customize</u> your reading experience with dark mode and a <u>dyslexia-friendly</u> font option. </p>
+    <hr class="separator">
+    <!-- main action buttons -->
+    <div class="button-container">
+      <button id="darkModeButton">
+        <i class="fas fa-moon"></i>
+        <span>Dark Mode</span>
+      </button>
+      <button id="fontSelect">
+        <i class="fas fa-font"></i>
+        <span>Accessible Font</span>
+      </button>
+      <button id="viewSaved">
+        <i class="fas fa-bookmark"></i>
+        <span>View Saved Texts</span>
+      </button>
+    </div>
+    <!-- advanced settings popup -->
+    <div class="config-popup" id="configPopup" style="display:none;">
+      <button class="close-config" id="closeConfig">
+        <i class="fas fa-times"></i>
+      </button>
+      <h4>Advanced Settings</h4>
+      <!-- voice speed slider -->
+      <div class="config-option">
+        <label for="voiceSpeed">
+          <i class="fas fa-tachometer-alt"></i> Speech Rate <span class="slider-value" id="speedValue">1.0x</span>
+        </label>
+        <div class="slider-control">
+          <span>Slow</span>
+          <input type="range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1.0">
+          <span>Fast</span>
+        </div>
+      </div>
+      <!-- simplify level buttons -->
+      <div class="config-option">
+        <label>
+          <i class="fas fa-text-width"></i> Simplification Level </label>
+        <div class="simplify-presets">
           <button class="preset-btn" data-level="1">Minimal</button>
           <button class="preset-btn active" data-level="2">Balanced</button>
           <button class="preset-btn" data-level="3">Maximum</button>
-      </div>
-  </div>
         </div>
-      
-
+      </div>
+    </div>
+    <!-- config panel logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Config Popup Toggle
-            const configButton = document.getElementById('configButton');
-            const configPopup = document.getElementById('configPopup');
-            const closeConfig = document.getElementById('closeConfig');
-            
-            configButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                configPopup.style.display = 'block';
-            });
-            
-            closeConfig.addEventListener('click', function() {
-                configPopup.style.display = 'none';
-            });
-            
-            document.addEventListener('click', function(e) {
-                if (!configPopup.contains(e.target)) {
-                    configPopup.style.display = 'none';
-                }
-            });
-            
-            // Voice Speed Control
-            const voiceSpeed = document.getElementById('voiceSpeed');
-            const speedValue = document.getElementById('speedValue');
-            
-            voiceSpeed.addEventListener('input', function() {
-                const speed = voiceSpeed.value;
-                speedValue.textContent = `${speed}x`;
-                chrome.storage.sync.set({ voiceSpeed: speed });
-            });
-            
-            // Simplification Level Control
-            const presetBtns = document.querySelectorAll('.preset-btn');
-            
-            presetBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const level = this.dataset.level;
-                    presetBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    let levelValue = 2; // Medium by default
-                    if (level === 'light') levelValue = 1;
-                    else if (level === 'strong') levelValue = 3;
-                    
-                    chrome.storage.sync.set({ simplifyLevel: levelValue });
-                });
-            });
-            
-            // Load saved settings
-            chrome.storage.sync.get(['voiceSpeed', 'simplifyLevel'], function(result) {
-                if (result.voiceSpeed) {
-                    voiceSpeed.value = result.voiceSpeed;
-                    speedValue.textContent = `${result.voiceSpeed}x`;
-                }
-                if (result.simplifyLevel) {
-                    presetBtns.forEach(btn => btn.classList.remove('active'));
-                    presetBtns[result.simplifyLevel-1].classList.add('active');
-                }
-            });
+      document.addEventListener('DOMContentLoaded', function() {
+        // config popup toggle
+        const configButton = document.getElementById('configButton');
+        const configPopup = document.getElementById('configPopup');
+        const closeConfig = document.getElementById('closeConfig');
+        configButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          configPopup.style.display = 'block';
         });
+        closeConfig.addEventListener('click', function() {
+          configPopup.style.display = 'none';
+        });
+        document.addEventListener('click', function(e) {
+          if (!configPopup.contains(e.target)) {
+            configPopup.style.display = 'none';
+          }
+        });
+        // voice speed slider interaction
+        const voiceSpeed = document.getElementById('voiceSpeed');
+        const speedValue = document.getElementById('speedValue');
+        voiceSpeed.addEventListener('input', function() {
+          const speed = voiceSpeed.value;
+          speedValue.textContent = `${speed}x`;
+          chrome.storage.sync.set({
+            voiceSpeed: speed
+          });
+        });
+        // simplification level selection
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        presetBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const level = this.dataset.level;
+            presetBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            let levelValue = parseInt(level); // ensure it's numeric
+            chrome.storage.sync.set({
+              simplifyLevel: levelValue
+            });
+          });
+        });
+        // load saved settings on load
+        chrome.storage.sync.get(['voiceSpeed', 'simplifyLevel'], function(result) {
+          if (result.voiceSpeed) {
+            voiceSpeed.value = result.voiceSpeed;
+            speedValue.textContent = `${result.voiceSpeed}x`;
+          }
+          if (result.simplifyLevel) {
+            presetBtns.forEach(btn => btn.classList.remove('active'));
+            presetBtns[result.simplifyLevel - 1].classList.add('active');
+          }
+        });
+      });
     </script>
-    
-    <!-- Other scripts -->
+    <!-- external scripts -->
     <script src="popup.js"></script>
     <script src="font.js"></script>
     <script src="config.js"></script>
-</body>
+  </body>
 </html>
-
-
