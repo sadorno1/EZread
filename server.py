@@ -87,7 +87,7 @@ def speak():
             input=texttospeech.SynthesisInput(ssml=ssml),
             voice=texttospeech.VoiceSelectionParams(
                 language_code="en-US",
-                ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+                name = "en-US-Wavenet-F",
             ),
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=texttospeech.AudioEncoding.MP3,
@@ -220,5 +220,5 @@ def get_saved_texts():
         return jsonify({"error": str(e)}), 500
     
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5000)
 

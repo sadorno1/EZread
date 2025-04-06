@@ -269,7 +269,7 @@ async function readSelectedText(text) {
 
     const timepointHeader = res.headers.get("X-Timepoints");
     const timepoints = timepointHeader ? JSON.parse(timepointHeader) : [];
-    console.log("⏱️ Timepoints:", timepoints);
+    console.log("Timepoints:", timepoints);
 
     const audioBlob = await res.blob();
     const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -277,7 +277,7 @@ async function readSelectedText(text) {
     let syncInterval;
 
     audio.onplay = () => {
-      console.log("🎵 Audio started");
+      console.log("Audio started");
 
       syncInterval = setInterval(() => {
         const currentTime = audio.currentTime;
