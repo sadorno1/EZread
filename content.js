@@ -242,16 +242,27 @@ function getOrCreateSessionId() {
   return sessionId;
 }
 
+
+async function getSpeed() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['voiceSpeed'], (result) => {
+      resolve(result.voiceSpeed || 1); 
+    });
+  });
+}
+
 // Read selected text aloud with audio + highlighting
 async function readSelectedText(text) {
   injectSpannifiedText(text);
   console.log("readSelectedText called with:", text);
 
   try {
+    const speed = await getSpeed();
+    console.log(" Using speed:", speed);
     const res = await fetch("http://localhost:5000/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, velocity: speed }),
     });
 
     if (!res.ok) throw new Error(`Backend failed with status ${res.status}`);

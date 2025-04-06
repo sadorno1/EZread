@@ -69,6 +69,7 @@ def simplify_text():
 def speak():
     data = request.json
     text = data.get("text", "")
+    velocity = float(data.get("velocity", 1.0))
 
     if not text:
         return jsonify({"error": "No text provided"}), 400
@@ -89,7 +90,8 @@ def speak():
                 ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
             ),
             audio_config=texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding.MP3
+                audio_encoding=texttospeech.AudioEncoding.MP3,
+                speaking_rate=velocity  #speed rate
             ),
             enable_time_pointing=["SSML_MARK"]
         )
