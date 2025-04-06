@@ -149,11 +149,23 @@ def save_simplification():
 def get_history():
     try:
         session_id = request.args.get("sessionId", "anonymous")
+        print(f"Fetching history for session: {session_id}")  # Debug print
+        
+        # First, check what's in the collection
+        all_docs = list(collection.find({}))
+        print(f"Total documents in collection: {len(all_docs)}")  # Debug print
+        
         history = list(
             collection.find({"sessionId": session_id})
             .sort("timestamp", -1)
             .limit(10)
         )
+        
+        print(f"Found {len(history)} documents for this session")  # Debug print
+        
+        # Print first document to see its structure
+        if history:
+            print("Sample document:", history[0])
 
         #serialize ObjectId for JSON
         for h in history:
@@ -162,6 +174,7 @@ def get_history():
         return jsonify(history)
 
     except Exception as e:
+        print("Error in get_history:", e)  # Debug print
         return jsonify({"error": str(e)}), 500
     
 @app.route("/get-saved-texts", methods=["GET"])
