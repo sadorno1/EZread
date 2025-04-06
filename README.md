@@ -1,6 +1,6 @@
 # EZRead
 
-EZRead is a Chrome extension designed to make online reading easier, more inclusive, and less overwhelming. It was created with a focus on accessibility and digital well-being — especially for people who experience reading fatigue, have ADHD, dyslexia, or just prefer a more supportive reading environment.
+EZRead is a Chrome extension designed to make online reading easier, more inclusive, and less overwhelming. It was created with a focus on accessibility and digital well-being, especially for people who experience reading fatigue, have ADHD, dyslexia, or just prefer a more supportive reading environment.
 
 ---
 
