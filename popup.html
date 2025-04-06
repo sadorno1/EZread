@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>EZRead</title>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -13,17 +12,18 @@
             --text-color: #202124;
             --light-gray: #f1f3f4;
             --border-radius: 8px;
-            --button-border: 1px solid #000000; 
+            --button-border: 1px solid #000000;
         }
         
         body {
-            width: 280px;
+            width: 300px;
             padding: 15px;
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: white;
             color: var(--text-color);
             margin: 0;
             line-height: 1.5;
+            position: relative;
         }
         
         .header {
@@ -88,7 +88,7 @@
         button {
             width: 100%;
             padding: 10px 12px;
-            border: var(--button-border); 
+            border: var(--button-border);
             border-radius: var(--border-radius);
             cursor: pointer;
             font-weight: 500;
@@ -112,7 +112,7 @@
         #darkModeButton {
             background-color: #ff85a2;
             color: white;
-            border: var(--button-border); 
+            border: var(--button-border);
         }
         
         #darkModeButton:hover {
@@ -144,13 +144,100 @@
             font-weight: 500;
             color: var(--primary-color);
         }
+
+        .config-popup {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 15px;
+            background: white;
+            border: var(--button-border);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            width: 260px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .config-popup h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .config-option {
+            margin-bottom: 16px;
+        }
+        
+        .config-option label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        input[type="range"] {
+            flex-grow: 1;
+            height: 4px;
+            cursor: pointer;
+        }
+        
+        .close-config {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .simplify-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+        
+        .preset-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 11px;
+            border-radius: 4px;
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+            min-width: 80px;
+        }
+        
+        .preset-btn.active {
+            background: #e8f0fe;
+            border-color: #d2e3fc;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="icons/32x32.png" alt="EZRead Logo" class="logo">
         <h3>EZRead</h3>
-        <button class="config-btn" title="Settings">
+        <button class="config-btn" title="Settings" id="configButton">
             <i class="fas fa-cog"></i>
         </button>
     </div>
@@ -177,8 +264,105 @@
         </button>
     </div>
 
-    <!-- Scripts at the bottom for better loading -->
+    <div class="config-popup" id="configPopup">
+        <button class="close-config" id="closeConfig">
+            <i class="fas fa-times"></i>
+        </button>
+        <h4>Advanced Settings</h4>
+        
+        <!-- Voice Speed Control -->
+        <div class="config-option">
+            <label for="voiceSpeed">
+                <i class="fas fa-tachometer-alt"></i> Speech Rate
+                <span class="slider-value" id="speedValue">1.0x</span>
+            </label>
+            <div class="slider-control">
+                <span>Slow</span>
+                <input type="range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1.0">
+                <span>Fast</span>
+            </div>
+        </div>
+        
+        <!-- Simplified Text Simplification Control -->
+        <div class="config-option">
+            <label>
+                <i class="fas fa-text-width"></i> Text Simplification
+            </label>
+            <div class="simplify-presets">
+                <button class="preset-btn" data-level="light">Minimal</button>
+                <button class="preset-btn active" data-level="medium">Balanced</button>
+                <button class="preset-btn" data-level="strong">Maximum</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Config Popup Toggle
+            const configButton = document.getElementById('configButton');
+            const configPopup = document.getElementById('configPopup');
+            const closeConfig = document.getElementById('closeConfig');
+            
+            configButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                configPopup.style.display = 'block';
+            });
+            
+            closeConfig.addEventListener('click', function() {
+                configPopup.style.display = 'none';
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!configPopup.contains(e.target)) {
+                    configPopup.style.display = 'none';
+                }
+            });
+            
+            // Voice Speed Control
+            const voiceSpeed = document.getElementById('voiceSpeed');
+            const speedValue = document.getElementById('speedValue');
+            
+            voiceSpeed.addEventListener('input', function() {
+                const speed = voiceSpeed.value;
+                speedValue.textContent = `${speed}x`;
+                chrome.storage.sync.set({ voiceSpeed: speed });
+            });
+            
+            // Simplification Level Control
+            const presetBtns = document.querySelectorAll('.preset-btn');
+            
+            presetBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const level = this.dataset.level;
+                    presetBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    let levelValue = 2; // Medium by default
+                    if (level === 'light') levelValue = 1;
+                    else if (level === 'strong') levelValue = 3;
+                    
+                    chrome.storage.sync.set({ simplifyLevel: levelValue });
+                });
+            });
+            
+            // Load saved settings
+            chrome.storage.sync.get(['voiceSpeed', 'simplifyLevel'], function(result) {
+                if (result.voiceSpeed) {
+                    voiceSpeed.value = result.voiceSpeed;
+                    speedValue.textContent = `${result.voiceSpeed}x`;
+                }
+                if (result.simplifyLevel) {
+                    presetBtns.forEach(btn => btn.classList.remove('active'));
+                    presetBtns[result.simplifyLevel-1].classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Other scripts -->
     <script src="popup.js"></script>
     <script src="font.js"></script>
 </body>
 </html>
+
+
